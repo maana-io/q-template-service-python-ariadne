@@ -1,5 +1,6 @@
-from ariadne import ObjectType, QueryType, gql, make_executable_schema
+from ariadne import ObjectType, QueryType, MutationType, gql, make_executable_schema
 from ariadne.asgi import GraphQL
+from asgi_lifespan import Lifespan, LifespanMiddleware
 
 # Define types using Schema Definition Language (https://graphql.org/learn/schema/)
 # Wrapping string in gql function provides validation and better error traceback
@@ -23,8 +24,8 @@ query = QueryType()
 @query.field("people")
 def resolve_people(*_):
     return [
-        {"firstName": "John", "lastName": "Doe", "age": 21},
-        {"firstName": "Bob", "lastName": "Boberson", "age": 24},
+        {"firstName": "Marie", "lastName": "Curie", "age": 21},
+        {"firstName": "Rubab", "lastName": "Nedzo", "age": 24},
     ]
 
 
@@ -40,30 +41,29 @@ def resolve_person_fullname(person, *_):
 # Create executable GraphQL schema
 schema = make_executable_schema(type_defs, [query, person])
 
+# --- ASGI app
+
 # Create an ASGI app using the schema, running in debug mode
 app = GraphQL(schema, debug=True)
 
-# import sys
+# 'Lifespan' is a standalone ASGI app.
+# It implements the lifespan protocol,
+# and allows registering lifespan event handlers.
+lifespan = Lifespan()
 
 
-# class App:
-#     def __init__(self, scope):
-#         assert scope["type"] == "http"
-#         self.scope = scope
-
-#     async def __call__(self, receive, send):
-#         await send(
-#             {
-#                 "type": "http.response.start",
-#                 "status": 200,
-#                 "headers": [[b"content-type", b"text/plain"]],
-#             }
-#         )
-#         version = f"{sys.version_info.major}.{sys.version_info.minor}"
-#         message = f"Hello world! From Uvicorn with Gunicorn in Alpine. Using Python {version}".encode(
-#             "utf-8"
-#         )
-#         await send({"type": "http.response.body", "body": message})
+@lifespan.on_event("startup")
+async def startup():
+    print("Starting up...")
+    print("... done!")
 
 
-# app = App
+@lifespan.on_event("shutdown")
+async def shutdown():
+    print("Shutting down...")
+    print("... done!")
+
+# 'LifespanMiddleware' returns an ASGI app.
+# It forwards lifespan requests to 'lifespan',
+# and anything else goes to 'app'.
+app = LifespanMiddleware(app, lifespan=lifespan)
