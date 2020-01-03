@@ -7,7 +7,7 @@
 ## Build
 
 ```
-pip install uvicorn gunicorn ariadne graphqlclient asgi-lifespan
+pip install uvicorn gunicorn ariadne graphqlclient asgi-lifespan python-dotenv requests
 ```
 
 ## Containerize
@@ -53,10 +53,10 @@ and visit http://0.0.0.0:4000
 For details, please refer to the [official documentation](https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker#development-live-reload).
 
 ## Editing
+
 To update any changes made to the service you will need to re run docker build.
 
 Note that if you require additional packages such as pandas and numpy you need to add your packages to the pip install in the Dockerfile. There are a few difficulties with installing these additional packages, this: https://github.com/docker-library/python/issues/381 explains the issue and the resolution.
-
 
 ## Deploy
 
