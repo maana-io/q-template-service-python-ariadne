@@ -20,6 +20,11 @@ def getAuthToken():
     authSecret = os.getenv('AUTH_SECRET')
     authIdentifier = os.getenv('AUTH_IDENTIFIER')
 
+    # Short-circuit for 'no-auth' scenario.
+    if(authProvider == ''):
+        print('Auth provider not set. Aborting token request...')
+        return None
+
     url = ''
     if authProvider == 'keycloak':
         url = f'{authDomain}/auth/realms/{authIdentifier}/protocol/openid-connect/token'
@@ -42,6 +47,7 @@ def getAuthToken():
 
 
 def getClient():
+
     graphqlClient = None
 
     # Build as closure to keep scope clean.
@@ -51,6 +57,10 @@ def getClient():
         if (client is None):
             print('Building graphql client...')
             token = getAuthToken()
+            if (token is None):
+                # Short-circuit for 'no-auth' scenario.
+                print('Failed to get access token. Abandoning client setup...')
+                return None
             url = os.getenv('MAANA_ENDPOINT_URL')
             client = GraphQLClient(url)
             client.inject_token('Bearer '+token)
