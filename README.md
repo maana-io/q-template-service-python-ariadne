@@ -4,6 +4,29 @@
 - Uses the [ASGI Lifespan middlware](https://pypi.org/project/asgi-lifespan/)
 - Concurrency, app server, and containerization is provided by the [Uvicorn+Gunicorn Docker](https://github.com/tiangolo/uvicorn-gunicorn-docker) base image
 
+## Features
+
+### Maana Q Client (i.e., peer-to-peer)
+
+It is possible, though not generally preferred, for services to depend directly on other services, passing requests through a secure CKG endpoint.  This template includes the necessary authentication code for your convenience.  Simply supply environment settings and use the `client` from the GraphQL context:
+
+```python
+    # A resolver can access the graphql client via the context.
+    client = info.context["client"]
+
+    # Query all maana services.
+    result = client.execute('''
+    {
+        allServices {
+            id
+            name
+        }
+    }
+    ''')
+
+    print(result)
+```
+
 ## Build
 
 ```
