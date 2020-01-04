@@ -35,7 +35,7 @@ def getAuthToken():
         'grant_type': 'client_credentials',
         'client_id': authClientId,
         'client_secret': authSecret,
-        'audience:': authIdentifier
+        'audience': authIdentifier
     }
 
     headers = {'content-type': 'application/x-www-form-urlencoded'}
