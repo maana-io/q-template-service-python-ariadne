@@ -4,8 +4,9 @@ RUN pip install ariadne uvicorn gunicorn asgi-lifespan python-dotenv requests gr
 
 COPY ./app /app
 COPY .env /.env
-COPY ./gunicorn_conf.py /.
+COPY ./gunicorn_conf.py /
 COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 WORKDIR /
 EXPOSE 8050
