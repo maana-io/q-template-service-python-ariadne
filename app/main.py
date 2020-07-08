@@ -1,7 +1,10 @@
 from ariadne import ObjectType, QueryType, MutationType, gql, make_executable_schema
 from ariadne.asgi import GraphQL
-from asgi_lifespan import Lifespan, LifespanMiddleware
+from asgi_lifespan import LifespanManager
 from graphqlclient import GraphQLClient
+from starlette.applications import Starlette
+
+import logging
 
 # HTTP request library for access token call
 import requests
@@ -22,7 +25,7 @@ def getAuthToken():
 
     # Short-circuit for 'no-auth' scenario.
     if(authProvider == ''):
-        print('Auth provider not set. Aborting token request...')
+        logging.warning('Auth provider not set. Aborting token request...')
         return None
 
     url = ''
@@ -42,7 +45,7 @@ def getAuthToken():
 
     r = requests.post(url, data=payload, headers=headers)
     response_data = r.json()
-    print("Finished auth token request...")
+    logging.info("Finished auth token request...")
     return response_data['access_token']
 
 
@@ -55,11 +58,11 @@ def getClient():
     def buildClient(client=graphqlClient):
         # Cached in regular use cases.
         if (client is None):
-            print('Building graphql client...')
+            logging.info('Building graphql client...')
             token = getAuthToken()
             if (token is None):
                 # Short-circuit for 'no-auth' scenario.
-                print('Failed to get access token. Abandoning client setup...')
+                logging.warning('Failed to get access token. Abandoning client setup...')
                 return None
             url = os.getenv('MAANA_ENDPOINT_URL')
             client = GraphQLClient(url)
@@ -125,29 +128,15 @@ schema = make_executable_schema(type_defs, [query, person])
 
 # --- ASGI app
 
+async def startup():
+    logging.info("Starting up...")
+    logging.info("... done!")
+
+async def shutdown():
+    logging.info("Shutting down...")
+    logging.info("... done!")
+
 # Create an ASGI app using the schema, running in debug mode
 # Set context with authenticated graphql client.
-app = GraphQL(
-    schema, debug=True, context_value={'client': getClient()})
-
-# 'Lifespan' is a standalone ASGI app.
-# It implements the lifespan protocol,
-# and allows registering lifespan event handlers.
-lifespan = Lifespan()
-
-
-@lifespan.on_event("startup")
-async def startup():
-    print("Starting up...")
-    print("... done!")
-
-
-@lifespan.on_event("shutdown")
-async def shutdown():
-    print("Shutting down...")
-    print("... done!")
-
-# 'LifespanMiddleware' returns an ASGI app.
-# It forwards lifespan requests to 'lifespan',
-# and anything else goes to 'app'.
-app = LifespanMiddleware(app, lifespan=lifespan)
+app = Starlette(debug=True, on_startup=[startup], on_shutdown=[shutdown])
+app.mount('/', GraphQL(schema, debug=True, context_value={'client': getClient()}))
