@@ -16,7 +16,11 @@ It is possible, though not generally preferred, for services to depend directly 
 #
 
 MAANA_ENDPOINT_URL=
+```
 
+Authentication settings are defined in `.auth.env` - this file should not committed to version control to avoid leaking access keys.
+
+```bash
 
 #
 # ---------------AUTHENTICATION VARIABLES--------------------
@@ -59,10 +63,29 @@ And, in your resolver:
     print(result)
 ```
 
+### Other GraphQL clients
+
+You can create GraphQL clients to talk to other services, with or without authentication, with the same or different authentication settings
+
+```python
+from app.qclient import QClient
+
+# CKG service URL, use same authentication as Q settings above
+client = QClient('https://<q url>/service/<ckgserviceid>/graphql')
+
+# GraphQL service without authentication
+client = QClient('https://some-other-service-url/', require_auth=False)
+
+# GraphQL service with different authentication
+client = QClient('https://authenticated-service/', auth_provider='keycloak', auth_domain=..., auth_client_id=..., auth_secret=..., auth_identifier=...)
+```
+
 ## Build
 
+This template requires Python 3 to run.
+
 ```
-pip install uvicorn gunicorn ariadne graphqlclient asgi-lifespan python-dotenv requests
+pip3 install 'uvicorn==0.11.*' 'gunicorn==20.*.*' 'ariadne==0.11.*' 'graphqlclient==0.2.*' 'asgi-lifespan==1.0.1' python-dotenv requests
 ```
 
 ## Containerize
@@ -90,7 +113,7 @@ For details, please refer to the [official documentation](https://github.com/tia
 To run the GraphQL service locally (Via Docker):
 
 ```
-docker run -it -p 4000:80 -t my-service
+docker run -it -p 4000:4000 -t my-service
 ```
 
 and visit http://0.0.0.0:4000
@@ -100,7 +123,7 @@ and visit http://0.0.0.0:4000
 To run the GraphQL service via Docker with hot reload:
 
 ```
-docker run -it -p 4000:80 -v $(pwd):/app my-service /start-reload-docker.sh
+docker run -it -p 4000:4000 -v $(pwd):/app my-service /start-reload-docker.sh
 ```
 
 and visit http://0.0.0.0:4000
@@ -111,7 +134,8 @@ For details, please refer to the [official documentation](https://github.com/tia
 
 To update any changes made to the service you will need to re run docker build.
 
-Note that if you require additional packages such as pandas and numpy you need to add your packages to the pip install in the Dockerfile. There are a few difficulties with installing these additional packages, this: https://github.com/docker-library/python/issues/381 explains the issue and the resolution.
+To add new dependencies it is advised to add them to `requirements.txt` instead of modifying Dockerfile directly,
+as this will significantly speed up build process due to docker layer caching.
 
 ## Deploy
 
