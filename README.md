@@ -16,7 +16,11 @@ It is possible, though not generally preferred, for services to depend directly 
 #
 
 MAANA_ENDPOINT_URL=
+```
 
+Authentication settings are defined in `.auth.env` - this file should not committed to version control to avoid leaking access keys.
+
+```bash
 
 #
 # ---------------AUTHENTICATION VARIABLES--------------------
@@ -57,6 +61,23 @@ And, in your resolver:
     ''')
 
     print(result)
+```
+
+### Other GraphQL clients
+
+You can create GraphQL clients to talk to other services, with or without authentication, with the same or different authentication settings
+
+```python
+from app.qclient import QClient
+
+# CKG service URL, use same authentication as Q settings above
+client = QClient('https://<q url>/service/<ckgserviceid>/graphql')
+
+# GraphQL service without authentication
+client = QClient('https://some-other-service-url/', require_auth=False)
+
+# GraphQL service with different authentication
+client = QClient('https://authenticated-service/', auth_provider='keycloak', auth_domain=..., auth_client_id=..., auth_secret=..., auth_identifier=...)
 ```
 
 ## Build

@@ -5,6 +5,7 @@ RUN pip3 install 'uvicorn==0.11.*' 'gunicorn==20.*' 'ariadne==0.11.*' 'graphqlcl
 
 COPY ./app /app
 COPY .env /.env
+COPY .auth.env /.auth.env
 COPY ./gunicorn_conf.py /
 COPY requirements.txt /
 COPY start.sh /start.sh
